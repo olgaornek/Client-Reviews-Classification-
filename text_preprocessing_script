@@ -145,3 +145,65 @@ X_features = vectorizer.fit_transform(df['text_cleaned'])
 
 # 3. Display the shape of the resulting matrix
 print(f"Shape of the TF-IDF matrix (Documents x Features): {X_features.shape}")
+
+
+#Convert text to TF-IDF vectors
+
+# 1. Initialize the TfidfVectorizer
+vectorizer = TfidfVectorizer(stop_words='english')
+
+# 2. Fit the vectorizer to the data and transform the data
+# This step creates the vocabulary and calculates the TF-IDF scores.
+X_features = vectorizer.fit_transform(df['text_cleaned'])
+
+# 3. Display the shape of the resulting matrix
+print(f"Shape of the TF-IDF matrix (Documents x Features): {X_features.shape}")
+
+
+from sklearn.feature_extraction.text import CountVectorizer
+
+# 1. Initialize the CountVectorizer
+#    We don't need stopwords here because you already removed them earlier.
+count_vectorizer = CountVectorizer() 
+
+# 2. Fit the vectorizer to the final text and transform the data
+#    'X_counts' is a Sparse Matrix containing the raw word counts.
+X_counts = count_vectorizer.fit_transform(df['text_cleaned'])
+
+# 3. Get the list of feature names (the unique lemmas/stems)
+feature_names = count_vectorizer.get_feature_names_out()
+
+
+word_frequencies = pd.Series(
+    X_counts.sum(axis=0).A[0],  # Use .A[0] to ensure a clean 1D array is passed
+    index=feature_names
+)
+
+# Display the top 20 most frequent words (lemmas/stems)
+print("## Top 20 Word Frequencies After Lemmatization/Stemming")
+print(word_frequencies.sort_values(ascending=False).head(20))
+
+
+tfidfTransformer = TfidfTransformer()
+
+# Fit the transformer to the raw counts and transform them into TF-IDF scores
+# The transformer only needs to see the counts (X_counts)
+tfidf_matrix = tfidfTransformer.fit_transform(X_counts)
+
+# Display the Term-Document Matrix (Equivalent to your 'printTermDocumentMatrix' step) ---
+
+# Convert the sparse matrix to a dense DataFrame for viewing
+tfidf_df = pd.DataFrame(
+    tfidf_matrix.toarray(), 
+    columns=feature_names
+)
+
+print("## TF-IDF Matrix (Two-Step Process: CountVectorizer + TfidfTransformer)")
+print(f"Matrix Shape (Documents x Features): {tfidf_matrix.shape}")
+print(tfidf_df.head())
+
+
+# Vectorization
+vectorizer = TfidfVectorizer(stop_words="english")
+X = vectorizer.fit_transform(df["text_cleaned"])
+y = df["category"]
