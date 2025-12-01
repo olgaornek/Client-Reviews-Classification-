@@ -1,0 +1,110 @@
+# Vectorization
+vectorizer = TfidfVectorizer(stop_words="english")
+X = vectorizer.fit_transform(df["text_cleaned"])
+y = df["category"]
+
+# Train/test split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Model logisticRegression
+model = LogisticRegression(max_iter=200)
+model.fit(X_train, y_train)
+
+# Predictions
+y_pred = model.predict(X_test)
+
+# Evaluation
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+
+# print confusion matrix and accuracty
+classificationSummary(y_test, model.predict(X_test))
+
+# Example predictions
+sample_messages = [
+    "I can't log into my account.",
+    "I want to return the shoes.",
+    "My order hasn't arrived yet.",
+]
+
+sample_features = vectorizer.transform(sample_messages)
+
+# Run model on the data that we need to predict
+preds = model.predict(sample_features)
+
+# Display messages and predicted categories.
+for text, pred in zip(sample_messages, preds):
+    print(f"Message: {text} -> Predicted Category: {pred}")
+
+
+# -----------------------------------------------------------
+# Random Forest
+# Vectorization
+vectorizer = TfidfVectorizer(stop_words="english")
+X = vectorizer.fit_transform(df["text_cleaned"])
+y = df["category"]
+
+
+# Train/test split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Define the best parameters for the Random Forest model
+best_params = {
+    "n_estimators": 150,
+    "max_depth": 10,
+    "min_samples_split": 8,
+    "min_samples_leaf": 2,
+    "max_features": 'sqrt'
+}
+
+
+# Initialize Random Forest Regressor with reasonable params
+rf = RandomForestClassifier(**best_params, random_state=42)
+
+# Train model on "selected_features"
+rf.fit(X_train, y_train)
+
+feature_importance = pd.DataFrame({
+    # Use the selected features that the 'rf' model was trained on
+    "Feature": "text_cleaned", 
+    "Importance": rf.feature_importances_
+})
+
+feature_importance = feature_importance.sort_values(by="Importance", ascending=False)
+
+# Training Data: Predicting using "selected_features"
+y_pred = rf.predict(X_train)
+
+#    This ensures y_pred has the same length as y_test.
+y_pred = rf.predict(X_test)
+
+    
+# 2. Evaluate using the correct pair: y_test (actual) and y_pred (predicted)
+print(classification_report(y_test, y_pred))
+
+# print confusion matrix and accuracty
+classificationSummary(y_test, model.predict(X_test))
+
+# Example predictions
+sample_message = [
+    "I can't log into my account.",
+    "I want to return the shoes.",
+    "My order hasn't arrived yet.",
+]
+
+sample_feature = vectorizer.transform(sample_message)
+
+# Fit model with data to predict
+prediction = model.predict(sample_feature)
+
+# Display predicted categories.
+for text, prediction in zip(sample_message, prediction):
+print(f"Message: {text} -> Predicted Category: {prediction}")
+    
+
+    
