@@ -1,0 +1,147 @@
+# Import required libraries
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.linear_model import LogisticRegression
+from dmba import printTermDocumentMatrix, classificationSummary
+import nltk
+from nltk.corpus import stopwords
+import re
+from nltk.stem import WordNetLemmatizer
+nltk.download('wordnet')
+from nltk.stem import PorterStemmer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import MultinomialNB
+
+import emoji
+import contractions
+import num2words
+from num2words import num2words
+import datefinder
+from nltk.tokenize import word_tokenize
+
+# Load dataset
+df = pd.read_csv("text_classification_dataset.csv")
+
+# Check data
+print(df['category'].value_counts())
+df.head(10)
+
+# According to Category distribution the most common Category is "Return/Refund Request".
+
+# Visualize categories distribution.
+df['category'].value_counts().plot(kind='bar')
+plt.ylim(ymin=300)
+
+# Check the length of categories.
+
+df['message_length'] = df['message_text'].str.len()
+length_distribution = df['message_length'].describe()
+print(length_distribution)
+
+
+ltk.download(['stopwords', 'wordnet', 'averaged_perceptron_tagger_eng', 'punkt_tab'])
+stop_words = set(stopwords.words('english'))
+lemmatizer = WordNetLemmatizer()
+
+
+def standardize_dates(text):
+    # This definition is mandatory to prevent NameError
+    return text
+
+def convert_numbers_to_text(text):
+    text = re.sub(r'\b(\d+)\b', lambda match: num2words(int(match.group(1))), text)
+    return text
+
+def get_wordnet_pos(treebank_tag):
+    if treebank_tag.startswith('J'):
+        return nltk.corpus.wordnet.ADJ
+    elif treebank_tag.startswith('V'):
+        return nltk.corpus.wordnet.VERB
+    elif treebank_tag.startswith('N'):
+        return nltk.corpus.wordnet.NOUN
+    elif treebank_tag.startswith('R'):
+        return nltk.corpus.wordnet.ADV
+    else:
+        return nltk.corpus.wordnet.NOUN
+
+# Data cleaning and normalization, inlcuding:
+# Check if data is in string data type.
+# Remove links and emails
+# Expand shorten forms of words into their full form.
+# Remove emaoji
+# Standatdize dates
+# Convert to lowercase
+# Remove almostpunctuation, numbers, and special characters
+
+def clean_and_normalize_text(text):
+
+    # Ensure input is string
+    text = str(text)
+
+    # Text clenup
+    text = re.sub(r'https?:\/\/\S+', '', text)
+    text = re.sub(r'@\w+', '', text)
+
+    text = contractions.fix(text)
+    text = emoji.demojize(text)
+    text = convert_numbers_to_text(text)
+    text = standardize_dates(text)
+
+    text = text.lower()
+    text = re.sub(r'[^a-zA-Z\s]', '', text)
+
+    return text
+
+
+# Tokenization and lemmatization
+
+def tokenize_and_lemmatize(text):
+
+    # Tokenization
+    tokens = word_tokenize(text)
+
+    # Stop word removal
+    filtered_tokens = [word for word in tokens if word not in stop_words and len(word) > 1]
+
+    # Pos_tagging
+    pos_tokens = nltk.tag.pos_tag(filtered_tokens)
+
+    # Lemmatization
+    lemmatized_tokens = []
+    for word, tag in pos_tokens:
+        wordnet_tag = get_wordnet_pos(tag)
+        lemma = lemmatizer.lemmatize(word, pos=wordnet_tag)
+        lemmatized_tokens.append(lemma)
+
+    return " ".join(lemmatized_tokens)
+
+# Create pipeline.
+
+def process_text_pipeline(text):
+
+    # 1. Run Cleanup and Normalization
+    cleaned_text = clean_and_normalize_text(text)
+
+    # 2. Run Tokenization and Lemmatization
+    final_text = tokenize_and_lemmatize(cleaned_text)
+
+    return final_text
+
+
+# Create a new column "text_cleaned"
+
+df.loc[:, 'text_cleaned'] = df['message_text'].apply(process_text_pipeline)
+
+
+
+X_features = vectorizer.fit_transform(df['text_cleaned'])
+
+# 3. Display the shape of the resulting matrix
+print(f"Shape of the TF-IDF matrix (Documents x Features): {X_features.shape}")
